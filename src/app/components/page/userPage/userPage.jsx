@@ -42,8 +42,13 @@ const UserPage = ({ userId }) => {
                                 "
                                     >
                                         <img
-                                            src="https://avatars.dicebear.com/api/avataaars/qweqwdas.svg"
-                                            className="rounded-circle"
+                                            src={`https://avatars.dicebear.com/api/avataaars/${(
+                                                Math.random() + 1
+                                            )
+                                                .toString(36)
+                                                .substring(7)}.svg`}
+                                            className="rounded-circle shadow-1-strong me-3"
+                                            alt="avatar"
                                             width="150"
                                         />
                                         <div className="mt-3">

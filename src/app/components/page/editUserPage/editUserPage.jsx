@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useHistory, useParams } from "react-router-dom";
+import { useHistory, useParams, Link } from "react-router-dom";
 import { validator } from "../../../utils/validator";
 import api from "../../../api";
 import TextField from "../../common/form/textField";
@@ -118,6 +118,7 @@ const EditUserPage = () => {
             [target.name]: target.value
         }));
     };
+
     const validate = () => {
         const errors = validator(data, validatorConfig);
         setErrors(errors);
@@ -171,13 +172,20 @@ const EditUserPage = () => {
                                 name="qualities"
                                 label="Выберите ваши качества"
                             />
+
                             <button
                                 type="submit"
                                 disabled={!isValid}
-                                className="btn btn-primary w-100 mx-auto"
+                                className="btn btn-primary w-100 mx-auto mb-1"
                             >
                                 Обновить
                             </button>
+                            <Link
+                                className="btn btn-outline-primary w-100 "
+                                to={`/users/${userId}`}
+                            >
+                                Назад
+                            </Link>
                         </form>
                     ) : (
                         "Loading..."
