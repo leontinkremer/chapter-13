@@ -3,12 +3,15 @@ import PropTypes from "prop-types";
 import api from "../../../api";
 import Qualities from "../../ui/qualities";
 import { useHistory } from "react-router-dom";
+import SelectField from "../../common/form/selectField";
 
 const UserPage = ({ userId }) => {
     const history = useHistory();
     const [user, setUser] = useState();
     const [usersList, setUsersList] = useState();
     const [commentsList, setCommentsList] = useState();
+    const [commentFor, setCommentFor] = useState("");
+    const [comment, setComment] = useState("");
     useEffect(() => {
         api.users.getById(userId).then((data) => setUser(data));
         api.users.fetchAll().then((data) => setUsersList(data));
@@ -16,9 +19,49 @@ const UserPage = ({ userId }) => {
             .fetchCommentsForUser(userId)
             .then((data) => setCommentsList(data));
     }, []);
+
     const handleClick = () => {
         history.push(history.location.pathname + "/edit");
     };
+
+    const handleDelete = (e) => {
+        api.comments.remove(e);
+        api.comments
+            .fetchCommentsForUser(userId)
+            .then((data) => setCommentsList(data));
+        console.log("comment to delete", e);
+        console.log(commentsList);
+    };
+    const handleCommentForChange = (event) => {
+        console.log("write comment for", event.target.value);
+        console.log("write comment for", event);
+        setCommentFor(event.target.value);
+    };
+
+    const handleCommentChange = (event) => {
+        console.log("comment", event.target.value);
+        setComment(event.target.value);
+    };
+
+    // doing: continue here
+    const handleCommentSubmit = () => {
+        // const _id = "comment_id";
+        const pageId = user._id;
+        const userId = commentFor;
+        const content = comment;
+        console.log("userId", userId);
+        const data = { userId, pageId, content };
+        console.log("data", data);
+        api.comments.add(data).then((d) => console.log("comment posted", d));
+        api.comments
+            .fetchCommentsForUser(user._id)
+            .then((data) => setCommentsList(data));
+        setComment("");
+        setCommentFor("");
+    };
+
+    console.log(1);
+
     if (user && usersList) {
         return (
             <div className="container mt-3">
@@ -27,12 +70,7 @@ const UserPage = ({ userId }) => {
                         <div className="card mb-3">
                             <div className="card-body">
                                 <button
-                                    className="
-                                    position-absolute
-                                    top-0
-                                    end-0
-                                    btn btn-light btn-sm
-                                "
+                                    className="position-absolute top-0 end-0 btn btn-light btn-sm"
                                     onClick={handleClick}
                                 >
                                     <i className="bi bi-gear"></i>
@@ -131,22 +169,28 @@ const UserPage = ({ userId }) => {
                                 <div>
                                     <h2>New comment</h2>
                                     <div className="mb-4">
-                                        {/* <select
-                                                className="form-select"
-                                                name="userId"
+                                        <select
+                                            className="form-select"
+                                            name="userId"
+                                            value={commentFor}
+                                            onChange={handleCommentForChange}
+                                        >
+                                            <option
+                                                disabled
                                                 value=""
+                                                defaultValue
                                             >
+                                                Выберите пользователя
+                                            </option>
+                                            {usersList.map((user) => (
                                                 <option
-                                                    disabled
-                                                    value=""
-                                                    defaultValue
+                                                    key={user._id}
+                                                    value={user._id}
                                                 >
-                                                    Выберите пользователя
+                                                    {user.name}
                                                 </option>
-
-                                                <option>Доктор</option>
-                                                <option>Тусер</option>
-                                            </select> */}
+                                            ))}
+                                        </select>
                                     </div>
                                     <div className="mb-4">
                                         <label
@@ -156,92 +200,106 @@ const UserPage = ({ userId }) => {
                                             Сообщение
                                         </label>
                                         <textarea
-                                            className="form-control"
+                                            className="form-control mb-3"
                                             id="exampleFormControlTextarea1"
                                             rows="3"
+                                            value={comment}
+                                            onChange={handleCommentChange}
                                         ></textarea>
+                                        <button
+                                            onClick={handleCommentSubmit}
+                                            disabled={commentFor === ""}
+                                            className="btn btn-primary w-100"
+                                        >
+                                            Опубликовать
+                                        </button>
                                     </div>
                                 </div>
                             </div>
                         </div>
+                        {commentsList.length > 0 ? (
+                            <div className="card mb-3">
+                                <div className="card-body">
+                                    {console.log(commentsList)}
+                                    <h2>Comments</h2>
+                                    <hr />
+                                    {commentsList.map((comment) => (
+                                        <div
+                                            key={comment._id}
+                                            className="bg-light card-body mb-3"
+                                        >
+                                            <div className="row">
+                                                <div className="col">
+                                                    <div className="d-flex flex-start">
+                                                        <img
+                                                            src={`https://avatars.dicebear.com/api/avataaars/${(
+                                                                Math.random() +
+                                                                1
+                                                            )
+                                                                .toString(36)
+                                                                .substring(
+                                                                    7
+                                                                )}.svg`}
+                                                            className="rounded-circle shadow-1-strong me-3"
+                                                            alt="avatar"
+                                                            width="65"
+                                                        />
+                                                        <div className="flex-grow-1 flex-shrink-1">
+                                                            <div className="mb-4">
+                                                                <div className=" d-flex justify-content-between align-items-center">
+                                                                    {usersList.map(
+                                                                        (
+                                                                            user
+                                                                        ) =>
+                                                                            user._id ===
+                                                                            comment.userId ? (
+                                                                                <p
+                                                                                    className="mb-1"
+                                                                                    key={
+                                                                                        comment.userId
+                                                                                    }
+                                                                                >
+                                                                                    {
+                                                                                        user.name
+                                                                                    }{" "}
+                                                                                    (
+                                                                                    <span className="small">
+                                                                                        5
+                                                                                        минут
+                                                                                        назад
+                                                                                    </span>
 
-                        <div className="card mb-3">
-                            <div className="card-body">
-                                {console.log(commentsList)}
-                                <h2>Comments</h2>
-                                <hr />
-                                {commentsList.map((comment) => (
-                                    <div
-                                        key={comment._id}
-                                        className="bg-light card-body mb-3"
-                                    >
-                                        <div className="row">
-                                            <div className="col">
-                                                <div className="d-flex flex-start">
-                                                    <img
-                                                        src="https://avatars.dicebear.com/api/avataaars/qweqasdas.svg"
-                                                        className="rounded-circle shadow-1-strong me-3"
-                                                        alt="avatar"
-                                                        width="65"
-                                                        height="65"
-                                                    />
-                                                    <div className="flex-grow-1 flex-shrink-1">
-                                                        <div className="mb-4">
-                                                            <div className=" d-flex justify-content-between align-items-center">
-                                                                {usersList.map(
-                                                                    (user) =>
-                                                                        user._id ===
-                                                                        comment.userId ? (
-                                                                            <p
-                                                                                className="mb-1"
-                                                                                key={
-                                                                                    comment.userId
-                                                                                }
-                                                                            >
-                                                                                {
-                                                                                    user.name
-                                                                                }{" "}
-                                                                                (
-                                                                                <span className="small">
-                                                                                    5
-                                                                                    минут
-                                                                                    назад
-                                                                                </span>
+                                                                                    )
+                                                                                </p>
+                                                                            ) : null
+                                                                    )}
 
-                                                                                )
-                                                                            </p>
-                                                                        ) : null
-                                                                )}
-
-                                                                <button
-                                                                    className="
-                                                              btn btn-sm
-                                                              text-primary
-                                                              d-flex
-                                                              align-items-center
-                                                          "
-                                                                >
-                                                                    <i
-                                                                        className="
-                                                                  bi bi-x-lg
-                                                              "
-                                                                    ></i>
-                                                                </button>
+                                                                    <button
+                                                                        className="btn btn-sm text-primary d-flex align-items-center"
+                                                                        onClick={() =>
+                                                                            handleDelete(
+                                                                                comment._id
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        <i className="bi bi-x-lg"></i>
+                                                                    </button>
+                                                                </div>
+                                                                <p className="small mb-0">
+                                                                    {
+                                                                        comment.content
+                                                                    }
+                                                                </p>
                                                             </div>
-                                                            <p className="small mb-0">
-                                                                {
-                                                                    comment.content
-                                                                }
-                                                            </p>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    ))}
+                                </div>
                             </div>
-                        </div>
+                        ) : null}
                     </div>
                 </div>
             </div>
